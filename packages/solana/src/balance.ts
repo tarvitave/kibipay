@@ -2,8 +2,8 @@ import {
   Connection,
   PublicKey,
   LAMPORTS_PER_SOL,
-  TOKEN_PROGRAM_ID,
 } from '@solana/web3.js';
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import type { TokenAccount } from '@kibipay/shared-types';
 
 export async function getSolBalance(connection: Connection, publicKey: PublicKey): Promise<bigint> {

@@ -2,18 +2,27 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { crx } from '@crxjs/vite-plugin';
 import manifest from './manifest.json';
+import tailwindcss from 'tailwindcss';
+import autoprefixer from 'autoprefixer';
 
 export default defineConfig({
   plugins: [
     react(),
     crx({ manifest }),
   ],
+  css: {
+    postcss: {
+      plugins: [
+        tailwindcss({ config: './tailwind.config.cjs' }),
+        autoprefixer(),
+      ],
+    },
+  },
   build: {
     outDir: 'dist',
-    sourcemap: false, // don't ship source maps in extension package
+    sourcemap: false,
     rollupOptions: {
       output: {
-        // Keep chunk sizes manageable
         manualChunks: {
           solana: ['@solana/web3.js'],
           react: ['react', 'react-dom', 'react-router-dom'],
