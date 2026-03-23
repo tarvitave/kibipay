@@ -23,18 +23,12 @@ export default function Onramp() {
         const stripeOnramp = await loadStripeOnramp(session.publishableKey);
 
         if (!containerRef.current || !mounted) return;
+        if (!stripeOnramp) throw new Error('Failed to load Stripe on-ramp');
 
         const onrampSession = stripeOnramp.createSession({
           clientSecret: session.clientSecret,
           appearance: {
             theme: 'dark',
-            variables: {
-              colorBackground: '#0f0f23',
-              colorText: '#ffffff',
-              colorPrimary: '#1a4fff',
-              borderRadius: '12px',
-              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-            },
           },
         });
 
@@ -42,7 +36,7 @@ export default function Onramp() {
 
         onrampSession.addEventListener('onramp_session_updated', (e: unknown) => {
           const event = e as { payload: { session: { status: string } } };
-          if (event.payload.session.status === 'fulfillment_complete') {
+          if (event.payload?.session?.status === 'fulfillment_complete') {
             // Balance will refresh automatically on next poll
           }
         });
@@ -86,7 +80,8 @@ export default function Onramp() {
               <p className="text-red-400 text-sm">{error}</p>
               <p className="text-white/40 text-xs">
                 Stripe on-ramp requires a backend API. Make sure{' '}
-                <code className="text-brand-300">apps/backend</code> is deployed and configured.
+                <code className="text-brand-300">apps/backend</code> is deployed and configured
+                in Settings → Backend URL.
               </p>
             </div>
           </div>

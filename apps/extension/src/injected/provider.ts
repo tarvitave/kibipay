@@ -11,18 +11,18 @@ type EventCallback = (...args: unknown[]) => void;
 class EventEmitter {
   private listeners = new Map<string, Set<EventCallback>>();
 
-  on(event: string, cb: EventCallback) {
+  on(event: string, cb: EventCallback): EventEmitter {
     if (!this.listeners.has(event)) this.listeners.set(event, new Set());
     this.listeners.get(event)!.add(cb);
     return this;
   }
 
-  off(event: string, cb: EventCallback) {
+  off(event: string, cb: EventCallback): EventEmitter {
     this.listeners.get(event)?.delete(cb);
     return this;
   }
 
-  emit(event: string, ...args: unknown[]) {
+  emit(event: string, ...args: unknown[]): void {
     this.listeners.get(event)?.forEach((cb) => cb(...args));
   }
 }
@@ -73,7 +73,7 @@ class KibiPayProvider extends EventEmitter {
     });
   }
 
-  async connect(opts?: { onlyIfTrusted?: boolean }): Promise<{ publicKey: typeof this.publicKey }> {
+  async connect(opts?: { onlyIfTrusted?: boolean }): Promise<{ publicKey: { toBase58: () => string; toBytes: () => Uint8Array } | null }> {
     const origin = window.location.origin;
     const result = await this.send<{ publicKey: string; connected: boolean }>('DAPP_CONNECT', {
       origin,
@@ -128,7 +128,7 @@ class KibiPayProvider extends EventEmitter {
   async signMessage(
     message: Uint8Array,
     encoding?: 'utf8' | 'hex',
-  ): Promise<{ signature: Uint8Array; publicKey: typeof this.publicKey }> {
+  ): Promise<{ signature: Uint8Array; publicKey: { toBase58: () => string; toBytes: () => Uint8Array } | null }> {
     if (!this.isConnected) throw new Error('Not connected');
     const requestId = crypto.randomUUID();
     const result = await this.send<{ signature: string; publicKey: string }>('DAPP_SIGN_MESSAGE', {

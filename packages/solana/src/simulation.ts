@@ -1,4 +1,4 @@
-import { Connection, PublicKey, Transaction, VersionedTransaction, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { Connection, PublicKey, Transaction, VersionedTransaction } from '@solana/web3.js';
 import type { SimulationResult, BalanceChange } from '@kibipay/shared-types';
 
 const KNOWN_ERRORS: Record<string, string> = {
@@ -25,7 +25,7 @@ function parseErrorMessage(logs: string[] | null): string | null {
 export async function simulateTransaction(
   connection: Connection,
   transaction: Transaction | VersionedTransaction,
-  signerPublicKeys: PublicKey[],
+  _signerPublicKeys: PublicKey[],
 ): Promise<SimulationResult> {
   let result;
 
@@ -35,26 +35,17 @@ export async function simulateTransaction(
       replaceRecentBlockhash: true,
     });
   } else {
-    result = await connection.simulateTransaction(transaction, signerPublicKeys, {
-      commitment: 'confirmed',
-      replaceRecentBlockhash: true,
-    } as Parameters<Connection['simulateTransaction']>[2]);
+    // Legacy Transaction overload: simulateTransaction(tx, signers?, includeAccounts?)
+    result = await connection.simulateTransaction(transaction, undefined);
   }
 
   const { err, logs, accounts, unitsConsumed } = result.value;
   const errorMsg = err ? (parseErrorMessage(logs ?? []) ?? JSON.stringify(err)) : null;
 
   const balanceChanges: BalanceChange[] = [];
-  if (accounts) {
-    for (let i = 0; i < accounts.length; i++) {
-      const acct = accounts[i];
-      if (!acct) continue;
-      // SOL balance changes are visible via lamports delta
-      // Full parsing requires additional context; provide what we have
-    }
-  }
+  // Full balance change parsing requires pre/post account snapshots;
+  // accounts array from simulation only shows requested accounts.
 
-  // Estimate fee from units consumed (rough: 1000 units ≈ 0.000005 SOL)
   const feeEstimate = unitsConsumed ? Math.ceil((unitsConsumed / 1_000_000) * 5000) : 5000;
 
   return {

@@ -3,7 +3,7 @@ import Stripe from 'stripe';
 import { PublicKey } from '@solana/web3.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-11-20.acacia',
+  apiVersion: '2025-02-24.acacia',
 });
 
 // Simple in-memory rate limiter (use Upstash Redis for production)
@@ -56,8 +56,14 @@ export async function POST(req: NextRequest) {
   const cryptoCurrency = currency === 'usdc' ? 'USDC' : 'SOL';
   const network = cryptoCurrency === 'USDC' ? 'solana' : 'solana';
 
+  // stripe.crypto is a beta namespace not yet in the Stripe TS types
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const stripeCrypto = (stripe as any).crypto as {
+    onrampSessions: { create: (params: unknown) => Promise<{ client_secret: string; id: string }> };
+  };
+
   try {
-    const session = await stripe.crypto.onrampSessions.create({
+    const session = await stripeCrypto.onrampSessions.create({
       transaction_details: {
         destination_currency: cryptoCurrency.toLowerCase(),
         destination_network: network,
@@ -65,7 +71,7 @@ export async function POST(req: NextRequest) {
         ...(amount ? { destination_amount: String(amount) } : {}),
       },
       customer_ip_address: ip !== 'unknown' ? ip : undefined,
-    } as Parameters<typeof stripe.crypto.onrampSessions.create>[0]);
+    });
 
     return NextResponse.json({
       clientSecret: session.client_secret,

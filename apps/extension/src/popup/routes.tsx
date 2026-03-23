@@ -13,6 +13,7 @@ import ReviewTransaction from './screens/Send/ReviewTransaction.js';
 import Receive from './screens/Receive.js';
 import Onramp from './screens/Onramp/Onramp.js';
 import Settings from './screens/Settings/Settings.js';
+import ConnectedApps from './screens/Settings/ConnectedApps.js';
 import ConnectPrompt from './screens/DAppPrompts/ConnectPrompt.js';
 import SignPrompt from './screens/DAppPrompts/SignPrompt.js';
 import LoadingScreen from './components/LoadingScreen.js';
@@ -50,6 +51,7 @@ export function AppRoutes() {
       <Route path="/receive" element={<RequireUnlocked><Receive /></RequireUnlocked>} />
       <Route path="/onramp" element={<RequireUnlocked><Onramp /></RequireUnlocked>} />
       <Route path="/settings" element={<RequireUnlocked><Settings /></RequireUnlocked>} />
+      <Route path="/settings/connected-apps" element={<RequireUnlocked><ConnectedApps /></RequireUnlocked>} />
 
       {/* dApp prompts (opened as popup windows) */}
       <Route path="/dapp/connect" element={<ConnectPrompt />} />

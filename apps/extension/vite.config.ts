@@ -21,16 +21,18 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          solana: ['@solana/web3.js'],
-          react: ['react', 'react-dom', 'react-router-dom'],
-        },
-      },
-    },
   },
   optimizeDeps: {
-    include: ['@solana/web3.js', 'bip39', 'tweetnacl'],
+    include: ['@solana/web3.js', 'bip39', 'tweetnacl', 'buffer'],
+  },
+  define: {
+    // Some deps (cipher-base, hash.js) reference the Node `global` object
+    'global': 'globalThis',
+  },
+  resolve: {
+    alias: {
+      buffer: 'buffer/',
+      process: 'process/browser',
+    },
   },
 });

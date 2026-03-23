@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-11-20.acacia',
+  apiVersion: '2025-02-24.acacia',
 });
 
 // Must disable Next.js body parser for webhook signature verification
@@ -32,9 +32,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: message }, { status: 400 });
   }
 
-  switch (event.type) {
+  switch (event.type as string) {
     case 'crypto.onramp_session.updated': {
-      const session = event.data.object as {
+      const session = (event.data as { object: unknown }).object as {
         id: string;
         status: string;
         wallet_address?: { address: string; crypto_currency: string };

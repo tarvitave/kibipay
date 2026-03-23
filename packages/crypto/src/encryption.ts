@@ -16,12 +16,22 @@ function toBase64(bytes: Uint8Array): string {
   return btoa(String.fromCharCode(...bytes));
 }
 
-function fromBase64(b64: string): Uint8Array {
+function fromBase64(b64: string): Uint8Array<ArrayBuffer> {
   return new Uint8Array(
     atob(b64)
       .split('')
       .map((c) => c.charCodeAt(0)),
   );
+}
+
+// Ensure the Uint8Array is backed by a plain ArrayBuffer (not SharedArrayBuffer)
+function ensureArrayBuffer(arr: Uint8Array): Uint8Array<ArrayBuffer> {
+  if (arr.buffer instanceof ArrayBuffer) {
+    return arr as Uint8Array<ArrayBuffer>;
+  }
+  const copy = new Uint8Array(arr.length);
+  copy.set(arr);
+  return copy;
 }
 
 async function deriveKey(password: string, salt: Uint8Array): Promise<CryptoKey> {
@@ -36,7 +46,7 @@ async function deriveKey(password: string, salt: Uint8Array): Promise<CryptoKey>
   return crypto.subtle.deriveKey(
     {
       name: 'PBKDF2',
-      salt,
+      salt: ensureArrayBuffer(salt),
       iterations: PBKDF2_ITERATIONS,
       hash: 'SHA-256',
     },
@@ -48,12 +58,16 @@ async function deriveKey(password: string, salt: Uint8Array): Promise<CryptoKey>
 }
 
 export async function encryptVault(plaintext: string, password: string): Promise<EncryptedBlob> {
-  const salt = crypto.getRandomValues(new Uint8Array(SALT_LENGTH));
-  const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
+  const salt = ensureArrayBuffer(crypto.getRandomValues(new Uint8Array(SALT_LENGTH)));
+  const iv = ensureArrayBuffer(crypto.getRandomValues(new Uint8Array(IV_LENGTH)));
   const key = await deriveKey(password, salt);
   const enc = new TextEncoder();
 
-  const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(plaintext));
+  const ciphertext = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    enc.encode(plaintext),
+  );
 
   return {
     version: 1,

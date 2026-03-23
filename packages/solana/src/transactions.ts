@@ -4,7 +4,6 @@ import {
   Transaction,
   SystemProgram,
   Keypair,
-  sendAndConfirmTransaction,
   VersionedTransaction,
 } from '@solana/web3.js';
 import {
@@ -22,11 +21,10 @@ export async function buildTransferSol(
   lamports: bigint,
 ): Promise<Transaction> {
   const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
-  const tx = new Transaction({
-    recentBlockhash: blockhash,
-    lastValidBlockHeight,
-    feePayer: from,
-  });
+  const tx = new Transaction();
+  tx.recentBlockhash = blockhash;
+  tx.lastValidBlockHeight = lastValidBlockHeight;
+  tx.feePayer = from;
   tx.add(
     SystemProgram.transfer({
       fromPubkey: from,
@@ -46,11 +44,10 @@ export async function buildTransferSpl(
   decimals: number,
 ): Promise<Transaction> {
   const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
-  const tx = new Transaction({
-    recentBlockhash: blockhash,
-    lastValidBlockHeight,
-    feePayer: from,
-  });
+  const tx = new Transaction();
+  tx.recentBlockhash = blockhash;
+  tx.lastValidBlockHeight = lastValidBlockHeight;
+  tx.feePayer = from;
 
   const fromAta = await getAssociatedTokenAddress(mint, from);
   const toAta = await getAssociatedTokenAddress(mint, to);
@@ -115,9 +112,10 @@ export async function confirmTransaction(
 }
 
 export function serializeTransaction(tx: Transaction | VersionedTransaction): string {
-  return Buffer.from(
-    tx instanceof VersionedTransaction ? tx.serialize() : tx.serialize({ requireAllSignatures: false }),
-  ).toString('base64');
+  const bytes = tx instanceof VersionedTransaction
+    ? tx.serialize()
+    : tx.serialize({ requireAllSignatures: false });
+  return Buffer.from(bytes).toString('base64');
 }
 
 export function deserializeTransaction(serialized: string): Transaction {
