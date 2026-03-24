@@ -23,7 +23,7 @@ export default defineConfig({
     sourcemap: false,
   },
   optimizeDeps: {
-    include: ['@solana/web3.js', 'bip39', 'tweetnacl', 'buffer'],
+    include: ['@solana/web3.js', 'bip39', 'tweetnacl', 'buffer', 'stream-browserify'],
   },
   define: {
     // Some deps (cipher-base, hash.js) reference the Node `global` object
@@ -33,6 +33,8 @@ export default defineConfig({
     alias: {
       buffer: 'buffer/',
       process: 'process/browser',
+      // cipher-base (dep of bip39/pbkdf2/hash.js) needs stream at runtime
+      stream: 'stream-browserify',
     },
   },
 });
