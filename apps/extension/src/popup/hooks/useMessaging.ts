@@ -12,7 +12,15 @@ export function useMessaging() {
           id,
           payload,
         };
+
+        // Timeout in case the service worker crashes before registering its listener
+        // (Chrome MV3 may never call the callback in that case)
+        const timer = setTimeout(() => {
+          reject(new Error('Background service worker did not respond'));
+        }, 5000);
+
         chrome.runtime.sendMessage(message, (response: ExtensionResponse<T> | undefined) => {
+          clearTimeout(timer);
           if (chrome.runtime.lastError) {
             reject(new Error(chrome.runtime.lastError.message));
             return;
